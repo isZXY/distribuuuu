@@ -9,7 +9,7 @@ cfg = _C
 
 _C.MODEL = CN()
 _C.MODEL.ARCH = "resnet18"
-_C.MODEL.NUM_CLASSES = 1000
+_C.MODEL.NUM_CLASSES = 10
 _C.MODEL.PRETRAINED = False
 _C.MODEL.SYNCBN = False
 _C.MODEL.WEIGHTS = None
@@ -19,7 +19,7 @@ _C.MODEL.DUMMY_INPUT = False
 _C.TRAIN = CN()
 _C.TRAIN.BATCH_SIZE = 32
 _C.TRAIN.IM_SIZE = 224
-_C.TRAIN.DATASET = "./data/ILSVRC/"
+_C.TRAIN.DATASET = "./data/CIFAR/"
 _C.TRAIN.SPLIT = "train"
 _C.TRAIN.AUTO_RESUME = True
 _C.TRAIN.LOAD_OPT = True
@@ -42,7 +42,7 @@ _C.CUDNN.DETERMINISTIC = False
 
 _C.OPTIM = CN()
 # Learning rate policy select from {'cos', 'steps'}
-_C.OPTIM.MAX_EPOCH = 100
+_C.OPTIM.MAX_EPOCH = 10
 _C.OPTIM.LR_POLICY = "cos"
 _C.OPTIM.BASE_LR = 0.2
 _C.OPTIM.MIN_LR = 0.0

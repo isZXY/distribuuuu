@@ -5,7 +5,7 @@ CUDNN:
 MODEL:
   ARCH: resnet18
   DUMMY_INPUT: false
-  NUM_CLASSES: 1000
+  NUM_CLASSES: 10
   PRETRAINED: false
   SYNCBN: false
   WEIGHTS: null
@@ -14,7 +14,7 @@ OPTIM:
   DAMPENING: 0.0
   LR_MULT: 0.1
   LR_POLICY: cos
-  MAX_EPOCH: 100
+  MAX_EPOCH: 10
   MIN_LR: 0.0
   MOMENTUM: 0.9
   NESTEROV: true
@@ -26,14 +26,14 @@ OUT_DIR: ./resnet18
 RNG_SEED: null
 TEST:
   BATCH_SIZE: 200
-  DATASET: ./data/ILSVRC/
+  DATASET: default
   IM_SIZE: 256
   PRINT_FREQ: 10
   SPLIT: val
 TRAIN:
   AUTO_RESUME: true
   BATCH_SIZE: 32
-  DATASET: ./data/ILSVRC/
+  DATASET: default
   IM_SIZE: 224
   LOAD_OPT: true
   PIN_MEMORY: true

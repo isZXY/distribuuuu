@@ -118,21 +118,88 @@ class DummyDataset(torch.utils.data.Dataset):
         return self.len
 
 
+# def construct_train_loader():
+#     """Constructs the train data loader for ILSVRC dataset."""
+#     traindir = os.path.join(cfg.TRAIN.DATASET, cfg.TRAIN.SPLIT)
+#     if cfg.MODEL.DUMMY_INPUT:
+#         trainset = DummyDataset(1000, [3, 224, 224])
+#     else:
+#         trainset = torchvision.datasets.ImageFolder(
+#             root=traindir,
+#             transform=transforms.Compose(
+#                 [
+#                     transforms.RandomResizedCrop(cfg.TRAIN.IM_SIZE),
+#                     transforms.RandomHorizontalFlip(),
+#                     transforms.ToTensor(),
+#                     transforms.Normalize(
+#                         mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+#                     ),
+#                 ]
+#             ),
+#         )
+#     # DistributedSampler
+#     train_sampler = torch.utils.data.distributed.DistributedSampler(
+#         trainset, shuffle=True
+#     )
+#     train_loader = torch.utils.data.DataLoader(
+#         trainset,
+#         batch_size=cfg.TRAIN.BATCH_SIZE,
+#         num_workers=cfg.TRAIN.WORKERS,
+#         pin_memory=cfg.TRAIN.PIN_MEMORY,
+#         sampler=train_sampler,
+#         drop_last=True,
+#     )
+#     return train_loader
+#
+#
+# def construct_val_loader():
+#     """Constructs the validate data loader for ILSVRC dataset."""
+#     valdir = os.path.join(cfg.TRAIN.DATASET, cfg.TEST.SPLIT)
+#     if cfg.MODEL.DUMMY_INPUT:
+#         valset = DummyDataset(1000, [3, 224, 224])
+#     else:
+#         valset = torchvision.datasets.ImageFolder(
+#             root=valdir,
+#             transform=transforms.Compose(
+#                 [
+#                     transforms.Resize(cfg.TEST.IM_SIZE),
+#                     transforms.CenterCrop(224),
+#                     transforms.ToTensor(),
+#                     transforms.Normalize(
+#                         mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+#                     ),
+#                 ]
+#             ),
+#         )
+#     val_sampler = torch.utils.data.distributed.DistributedSampler(valset)
+#     val_loader = torch.utils.data.DataLoader(
+#         valset,
+#         batch_size=cfg.TEST.BATCH_SIZE,
+#         shuffle=False,
+#         sampler=val_sampler,
+#         num_workers=cfg.TRAIN.WORKERS,
+#         pin_memory=cfg.TRAIN.PIN_MEMORY,
+#         drop_last=False,
+#     )
+#     return val_loader
+
 def construct_train_loader():
-    """Constructs the train data loader for ILSVRC dataset."""
-    traindir = os.path.join(cfg.TRAIN.DATASET, cfg.TRAIN.SPLIT)
+    """Constructs the train data loader for CIFAR-10  dataset."""
+    # traindir = os.path.join(cfg.TRAIN.DATASET, cfg.TRAIN.SPLIT)
     if cfg.MODEL.DUMMY_INPUT:
         trainset = DummyDataset(1000, [3, 224, 224])
     else:
-        trainset = torchvision.datasets.ImageFolder(
-            root=traindir,
+        trainset = torchvision.datasets.CIFAR10(
+            root="../data",
+            train=True,
+            download=True,
             transform=transforms.Compose(
                 [
-                    transforms.RandomResizedCrop(cfg.TRAIN.IM_SIZE),
+                    transforms.RandomCrop(32, padding=4),
                     transforms.RandomHorizontalFlip(),
                     transforms.ToTensor(),
                     transforms.Normalize(
-                        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                        (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)
                     ),
                 ]
             ),
@@ -153,20 +220,22 @@ def construct_train_loader():
 
 
 def construct_val_loader():
-    """Constructs the validate data loader for ILSVRC dataset."""
+    """Constructs the validate data loader for CIFAR-10 dataset."""
     valdir = os.path.join(cfg.TRAIN.DATASET, cfg.TEST.SPLIT)
     if cfg.MODEL.DUMMY_INPUT:
         valset = DummyDataset(1000, [3, 224, 224])
     else:
-        valset = torchvision.datasets.ImageFolder(
-            root=valdir,
+        valset = torchvision.datasets.CIFAR10(
+            root="../data",
+            train=False,
+            download=True,
             transform=transforms.Compose(
                 [
-                    transforms.Resize(cfg.TEST.IM_SIZE),
-                    transforms.CenterCrop(224),
+                    transforms.RandomCrop(32, padding=4),
+                    transforms.RandomHorizontalFlip(),
                     transforms.ToTensor(),
                     transforms.Normalize(
-                        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                        (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)
                     ),
                 ]
             ),
@@ -182,8 +251,6 @@ def construct_val_loader():
         drop_last=False,
     )
     return val_loader
-
-
 def construct_optimizer(model):
     """Constructs the optimizer."""
     return torch.optim.SGD(
