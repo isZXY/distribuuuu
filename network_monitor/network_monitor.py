@@ -1,6 +1,6 @@
 import psutil
 import time
-
+from matplotlib import pyplot as plt
 
 def get_key():
     key_info = psutil.net_io_counters(pernic=True).keys()  # 获取网卡名称
@@ -26,19 +26,46 @@ def get_rate(func):
     net_out = {}
 
     for key in key_info:
-        net_in.setdefault(key, (now_recv.get(key) - old_recv.get(key)) / 1024)  # 每秒接收速率
-        net_out.setdefault(key, (now_sent.get(key) - old_sent.get(key)) / 1024)  # 每秒发送速率
+        net_in.setdefault(key, (now_recv.get(key) - old_recv.get(key)) / (1024 * 1024))  # 每秒接收速率
+        net_out.setdefault(key, (now_sent.get(key) - old_sent.get(key)) / (1024 * 1024))  # 每秒发送速率
 
     return key_info, net_in, net_out
 
 
-while 1:
-    try:
-        key_info, net_in, net_out = get_rate(get_key)
+if __name__ == '__main__':
+    flow_in = []
+    flow_out = []
+    throughtput = []
+    while True:
+        try:
+            key_info, net_in, net_out = get_rate(get_key)
+            for key in key_info:
+                if key == "meth1026":
+                    print('%s\nInput:\t %-5sMB/s\nOutput:\t %-5sMB/s\n' % (key, net_in.get(key), net_out.get(key)))
+                    flow_in.append(net_in.get(key))
+                    flow_out.append(net_out.get(key))
+                    throughtput.append(net_in.get(key)+net_out.get(key))
+        except KeyboardInterrupt:
+            plt.rcParams["font.sans-serif"] = ["SimHei"]
 
-        for key in key_info:
-            if key == "meth1026":
-                print('%s\nInput:\t %-5sKB/s\nOutput:\t %-5sKB/s\n' % (key, net_in.get(key), net_out.get(key)))
+            plt.figure(dpi=300,figsize=(6,4))
+            plt.plot(flow_in,'m.-.', label='ax2', linewidth=1)
+            plt.title("Inbound Traffic")
+            plt.xlabel("seconds")
+            plt.ylabel("MByte/s")
+            plt.savefig("flow_in.png")
 
-    except KeyboardInterrupt:
-        exit()
+            plt.figure(dpi=300, figsize=(6, 4))
+            plt.plot(flow_out, 'm.-.', label='ax2', linewidth=1)
+            plt.title("Outbound Traffic")
+            plt.xlabel("seconds")
+            plt.ylabel("MByte/s")
+            plt.savefig("flow_out.png")
+
+            plt.figure(dpi=300, figsize=(6, 4))
+            plt.plot(throughtput, 'm.-.', label='ax2', linewidth=1)
+            plt.title("Throughput")
+            plt.xlabel("seconds")
+            plt.ylabel("MByte/s")
+            plt.savefig("Throughput.png")
+            exit()
