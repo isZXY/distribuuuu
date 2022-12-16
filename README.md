@@ -104,12 +104,12 @@ python -m torch.distributed.launch \
     --node_rank=0 \
     --master_addr=localhost \
     --master_port=29500 \
-    train_net.py --cfg config/resnet18_sNsC.yaml \
+    train_net.py --cfg config/resnet18.yaml \
     OUT_DIR /tmp \
     MODEL.SYNCBN True \
     TRAIN.BATCH_SIZE 256
 
-# --cfg config/resnet18_sNsC.yaml parse config from file
+# --cfg config/resnet18.yaml parse config from file
 # OUT_DIR /tmp            overwrite OUT_DIR
 # MODEL.SYNCBN True       overwrite MODEL.SYNCBN
 # TRAIN.BATCH_SIZE 256    overwrite TRAIN.BATCH_SIZE
@@ -129,7 +129,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch \
     --node_rank=0 \
     --master_addr=localhost \
     --master_port=29500 \
-    train_net.py --cfg config/resnet18_sNsC.yaml
+    train_net.py --cfg config/resnet18.yaml
 
 # task 2:
 CUDA_VISIBLE_DEVICES=4,5,6,7 python -m torch.distributed.launch \
@@ -138,7 +138,7 @@ CUDA_VISIBLE_DEVICES=4,5,6,7 python -m torch.distributed.launch \
     --node_rank=1 \
     --master_addr=localhost \
     --master_port=29500 \
-    train_net.py --cfg config/resnet18_sNsC.yaml
+    train_net.py --cfg config/resnet18.yaml
 ```
 
 </details>
@@ -155,7 +155,7 @@ python -m torch.distributed.launch \
     --node_rank=0 \
     --master_addr="10.198.189.10" \
     --master_port=29500 \
-    train_net.py --cfg config/resnet18_sNsC.yaml
+    train_net.py --cfg config/resnet18.yaml
 
 # node 2:
 python -m torch.distributed.launch \
@@ -164,7 +164,7 @@ python -m torch.distributed.launch \
     --node_rank=1 \
     --master_addr="10.198.189.10" \
     --master_port=29500 \
-    train_net.py --cfg config/resnet18_sNsC.yaml
+    train_net.py --cfg config/resnet18.yaml
 ```
 
 </details>
@@ -185,7 +185,7 @@ srun --partition=openai-a100 \
      --gres=gpu:8 \
      --ntasks-per-node=8 \
      --job-name=Distribuuuu \
-     python -u train_net.py --cfg config/resnet18_sNsC.yaml \
+     python -u train_net.py --cfg config/resnet18.yaml \
      TRAIN.BATCH_SIZE 128 \
      OUT_DIR ./resnet18_8192bs \
      OPTIM.BASE_LR 6.4
