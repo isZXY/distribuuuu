@@ -13,12 +13,12 @@ from distribuuuu.config import cfg
 
 def train_epoch(train_loader, net, criterion, optimizer, cur_epoch, start_epoch, tic):
     """Train one epoch"""
-    rank = torch.distributed.get_rank()
+    rank = torch.distributed.get_rank()  # 获得进程序号
     batch_time, data_time, losses, top1, topk = utils.construct_meters()
     progress = utils.ProgressMeter(
         len(train_loader),
         [batch_time, data_time, losses, top1, topk],
-        prefix=f"TRAIN:  [{cur_epoch+1}]",
+        prefix=f"TRAIN:  [{cur_epoch + 1}]",
     )
 
     # Set learning rate
@@ -26,7 +26,7 @@ def train_epoch(train_loader, net, criterion, optimizer, cur_epoch, start_epoch,
     utils.set_lr(optimizer, lr)
     if rank == 0:
         logger.debug(
-            f"CURRENT EPOCH: {cur_epoch+1:3d},   LR: {lr:.4f},   POLICY: {cfg.OPTIM.LR_POLICY}"
+            f"CURRENT EPOCH: {cur_epoch + 1:3d},   LR: {lr:.4f},   POLICY: {cfg.OPTIM.LR_POLICY}"
         )
 
     # Set sampler
@@ -48,6 +48,7 @@ def train_epoch(train_loader, net, criterion, optimizer, cur_epoch, start_epoch,
 
         batch_size = inputs.size(0)
         acc_1, acc_k = utils.accuracy(outputs, targets, topk=(1, cfg.TRAIN.TOPK))
+
         loss, acc_1, acc_k = utils.scaled_all_reduce([loss, acc_1, acc_k])
 
         losses.update(loss.item(), batch_size)
@@ -58,7 +59,7 @@ def train_epoch(train_loader, net, criterion, optimizer, cur_epoch, start_epoch,
         end = time.time()
 
         if rank == 0 and (
-            (idx + 1) % cfg.TRAIN.PRINT_FREQ == 0 or (idx + 1) == len(train_loader)
+                (idx + 1) % cfg.TRAIN.PRINT_FREQ == 0 or (idx + 1) == len(train_loader)
         ):
             progress.cal_eta(idx + 1, len(train_loader), tic, cur_epoch, start_epoch)
             progress.display(idx + 1)
@@ -96,7 +97,7 @@ def validate(val_loader, net, criterion):
             end = time.time()
 
             if rank == 0 and (
-                (idx + 1) % cfg.TEST.PRINT_FREQ == 0 or (idx + 1) == len(val_loader)
+                    (idx + 1) % cfg.TEST.PRINT_FREQ == 0 or (idx + 1) == len(val_loader)
             ):
                 progress.display(idx + 1)
 
@@ -107,15 +108,15 @@ def train_model():
     """Train a model"""
 
     # Set up distributed device
-    utils.setup_distributed()
-    rank = int(os.environ["RANK"])
-    local_rank = int(os.environ["LOCAL_RANK"])
-    device = torch.device("cuda", local_rank)
+    utils.setup_distributed()  # DDP初始化设置,使用torch._C._distributed_c10d 设置DDP backend(NCCL)
+    rank = int(os.environ["RANK"])  # 确定该机器为matser or worker
+    local_rank = int(os.environ["LOCAL_RANK"])  # 进程号
+    device = torch.device("cuda", local_rank)  # 确定device
 
     utils.setup_seed(rank)
     utils.setup_logger(rank, local_rank)
     try:
-        net = models.build_model(
+        net = models.build_model(  # 建立模型
             arch=cfg.MODEL.ARCH,
             pretrained=cfg.MODEL.PRETRAINED,
             num_classes=cfg.MODEL.NUM_CLASSES,
@@ -131,7 +132,7 @@ def train_model():
     net = nn.SyncBatchNorm.convert_sync_batchnorm(net) if cfg.MODEL.SYNCBN else net
     net = net.to(device)
     # DistributedDataParallel Wrapper
-    net = DDP(net, device_ids=[local_rank], output_device=local_rank)
+    net = DDP(net, device_ids=[local_rank], output_device=local_rank)  # DDP Wrapper
 
     train_loader = utils.construct_train_loader()
     val_loader = utils.construct_val_loader()

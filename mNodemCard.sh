@@ -1,5 +1,3 @@
-# 2 node, 1 GPUs per node (2GPUs)
-# node 1:
 python -m torch.distributed.launch \
     --nproc_per_node=1 \
     --nnodes=2 \

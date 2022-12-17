@@ -44,7 +44,7 @@ def setup_distributed(backend="nccl", port=None):
 
     torch.cuda.set_device(rank % num_gpus)
 
-    dist.init_process_group(
+    dist.init_process_group(  #
         backend=backend,
         world_size=world_size,
         rank=rank,
@@ -89,20 +89,20 @@ def scaled_all_reduce(tensors):
     process group.
     """
     # There is no need for reduction in the single-proc case
-    gpus = torch.distributed.get_world_size()
+    gpus = torch.distributed.get_world_size()  # 全局并行数
     if gpus == 1:
         return tensors
     # Queue the reductions
     reductions = []
     for tensor in tensors:
-        reduction = torch.distributed.all_reduce(tensor, async_op=True)
+        reduction = torch.distributed.all_reduce(tensor, async_op=True)  # 返回reduce（求和）后的值
         reductions.append(reduction)
     # Wait for reductions to finish
     for reduction in reductions:
         reduction.wait()
     # Scale the results
     for tensor in tensors:
-        tensor.mul_(1.0 / gpus)
+        tensor.mul_(1.0 / gpus)  # 求均值
     return tensors
 
 
@@ -251,6 +251,8 @@ def construct_val_loader():
         drop_last=False,
     )
     return val_loader
+
+
 def construct_optimizer(model):
     """Constructs the optimizer."""
     return torch.optim.SGD(
