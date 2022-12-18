@@ -19,13 +19,16 @@ def train_epoch(train_loader, net, criterion, optimizer, cur_epoch, start_epoch,
     process_time = time_end - time_start
     logger.info(" 获得进程序号耗时 {} s".format(process_time))
 
+    time_start = time.time()
     batch_time, data_time, losses, top1, topk = utils.construct_meters()
     progress = utils.ProgressMeter(
         len(train_loader),
         [batch_time, data_time, losses, top1, topk],
         prefix=f"TRAIN:  [{cur_epoch + 1}]",
     )
-
+    time_end = time.time()
+    process_time = time_end - time_start
+    logger.info("设置测量耗时 {} s".format(process_time))
     # Set learning rate
     lr = utils.get_epoch_lr(cur_epoch)
     utils.set_lr(optimizer, lr)
@@ -40,6 +43,7 @@ def train_epoch(train_loader, net, criterion, optimizer, cur_epoch, start_epoch,
     acc_train_time = 0
     acc_reduce_time = 0
     acc_update_time = 0
+    acc_updatelog_time = 0
     # time_end = time.time()
     # train_time = time_end - time_start
     # logger.info(" 获得进程序号耗时 {} s".format(acc_process_time))
@@ -61,7 +65,7 @@ def train_epoch(train_loader, net, criterion, optimizer, cur_epoch, start_epoch,
         batch_size = inputs.size(0)
 
         acc_1, acc_k = utils.accuracy(outputs, targets, topk=(1, cfg.TRAIN.TOPK))
-
+        time_end = time.time()
         train_time = time_end - time_start
         acc_train_time += train_time
 
@@ -71,9 +75,13 @@ def train_epoch(train_loader, net, criterion, optimizer, cur_epoch, start_epoch,
         reduce_time = time_end - time_start
         acc_reduce_time += reduce_time
 
+        time_start = time.time()
         losses.update(loss.item(), batch_size)
         top1.update(acc_1[0].item(), batch_size)
         topk.update(acc_k[0].item(), batch_size)
+        time_end = time.time()
+        acc_updatelog_time += (time_end - time_start)
+
         time_start = time.time()
         batch_time.update(time.time() - end)
         time_end = time.time()
@@ -87,7 +95,8 @@ def train_epoch(train_loader, net, criterion, optimizer, cur_epoch, start_epoch,
         ):
             progress.cal_eta(idx + 1, len(train_loader), tic, cur_epoch, start_epoch)
             progress.display(idx + 1)
-    return acc_train_time, acc_reduce_time, acc_update_time
+
+    return acc_train_time, acc_reduce_time, acc_update_time, acc_updatelog_time
 
 
 def validate(val_loader, net, criterion):
@@ -135,7 +144,6 @@ def train_model():
     # Set up distributed device
     time_start = time.time()
     utils.setup_distributed()  # DDP初始化设置,使用torch._C._distributed_c10d 设置DDP backend(NCCL)
-    time_end = time.time()
 
     rank = int(os.environ["RANK"])  # 确定该机器为matser or worker
     local_rank = int(os.environ["LOCAL_RANK"])  # 进程号
@@ -155,7 +163,7 @@ def train_model():
             pretrained=cfg.MODEL.PRETRAINED,
             num_classes=cfg.MODEL.NUM_CLASSES,
         )
-
+    time_end = time.time()
     logger.info(" setup_distributed 耗时 {} s".format(time_end - time_start))
 
     # SyncBN (https://pytorch.org/docs/stable/generated/torch.nn.SyncBatchNorm.html)
@@ -199,18 +207,23 @@ def train_model():
     period_local_train = 0
     period_local_update = 0
     period_vaildate = 0
+    period_log_update = 0
     for epoch in range(start_epoch, cfg.OPTIM.MAX_EPOCH):
         # Train one epoch
-        acc_train_time, acc_reduce_time, acc_update_time = train_epoch(train_loader, net, criterion, optimizer, epoch,
-                                                                       start_epoch, tic)
+        acc_train_time, acc_reduce_time, acc_update_time, acc_updatelog_time = train_epoch(train_loader, net, criterion,
+                                                                                           optimizer, epoch,
+                                                                                           start_epoch, tic)
 
         logger.info("epoch {} train 耗时 {} s".format(epoch, acc_train_time))
         logger.info("epoch {} reduce 耗时 {} s".format(epoch, acc_reduce_time))
         logger.info("epoch {} update 耗时 {} s".format(epoch, acc_update_time))
+        logger.info("epoch {} update_log 耗时 {} s".format(epoch, acc_updatelog_time))
 
         period_local_train += acc_train_time
         period_allreduce += acc_reduce_time
         period_local_update += acc_update_time
+        period_log_update += acc_updatelog_time
+
         # Validate
         start = time.time()
         acc1, acck = validate(val_loader, net, criterion)
@@ -225,12 +238,13 @@ def train_model():
                 f"ACCURACY: TOP1 {acc1:.3f}(BEST {best_acc1:.3f}) | TOP{cfg.TRAIN.TOPK} {acck:.3f} | SAVED {checkpoint_file}"
             )
         end = time.time()
-        logger.info("epoch {} 验证耗时 {} s".format(end - start))
+        logger.info("epoch {} 验证耗时 {} s".format(epoch, end - start))
         period_vaildate += (end - start)
 
     logger.info("**!**总train耗时 {} s".format(period_local_train))
     logger.info("**!**总update耗时 {} s".format(period_local_update))
-    logger.info("**!**总_allreduce耗时 {} s".format(period_allreduce))
+    logger.info("**!**总allreduce耗时 {} s".format(period_allreduce))
+    logger.info("**!**总period_log_update耗时 {} s".format(period_log_update))
     logger.info("**!**总验证耗时 {} s".format(period_vaildate))
 
 

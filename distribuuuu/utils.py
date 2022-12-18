@@ -190,7 +190,7 @@ def construct_train_loader():
         trainset = DummyDataset(1000, [3, 224, 224])
     else:
         trainset = torchvision.datasets.CIFAR10(
-            root="../data",
+            root="data",
             train=True,
             download=True,
             transform=transforms.Compose(
@@ -226,7 +226,7 @@ def construct_val_loader():
         valset = DummyDataset(1000, [3, 224, 224])
     else:
         valset = torchvision.datasets.CIFAR10(
-            root="../data",
+            root="data",
             train=False,
             download=True,
             transform=transforms.Compose(
@@ -315,8 +315,8 @@ class ProgressMeter(object):
     def cal_eta(self, iters, total_iter, tic=time.time(), cur_epoch=0, start_epoch=0):
         time_elapsed = time.time() - tic
         ratio_running = (
-            cur_epoch - start_epoch + iters / total_iter
-        ) / cfg.OPTIM.MAX_EPOCH
+                                cur_epoch - start_epoch + iters / total_iter
+                        ) / cfg.OPTIM.MAX_EPOCH
         ratio_remaining = 1 - (cur_epoch + iters / total_iter) / cfg.OPTIM.MAX_EPOCH
         self.time_eta = time_elapsed / ratio_running * ratio_remaining
 

@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false" compareModeInSync="TIMESTAMP">
+  <component name="PublishConfigData" autoUpload="Always" serverName="1 (2)" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false" compareModeInSync="TIMESTAMP">
     <option name="confirmBeforeUploading" value="false" />
     <serverData>
-      <paths name="root@hz.matpool.com:27513 password (3)">
+      <paths name="1">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/root/distribuuuu" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="1 (2)">
         <serverdata>
           <mappings>
             <mapping deploy="/root/distribuuuu" local="$PROJECT_DIR$" />
